@@ -1,6 +1,6 @@
 # Lab 007: a work tracker for people and AI agents
 
-The code behind our lab [A Work Tracker for People and AI Agents](https://plainfunction.com.au/labs/work-tracker).
+The code behind our lab [We Gave AI Agents a To-Do List They Can't Tick Off](https://plainfunction.com.au/labs/work-tracker).
 It covers the parts of a work tracker most teams use: a list of work, who has
 it, where it's up to, and what happened to it.
 
