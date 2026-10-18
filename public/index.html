@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Work</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Work</h1>
+    <p id="me" hidden><span id="me-name"></span> · <button type="button" id="sign-out" class="link">Sign out</button></p>
+  </header>
+
+  <main>
+    <form id="sign-in" class="panel" hidden>
+      <h2>Sign in</h2>
+      <p>Paste the token you were given. It's kept in a cookie this page's code can't read.</p>
+      <label for="token">Token</label>
+      <input id="token" name="token" type="password" autocomplete="off" required>
+      <button type="submit">Sign in</button>
+      <p class="error" role="alert"></p>
+    </form>
+
+    <div id="app" hidden>
+      <section id="asks" class="panel asks" hidden>
+        <h2>Waiting on you</h2>
+        <ul></ul>
+      </section>
+
+      <form id="add" class="add">
+        <label for="add-title" class="sr">Add work</label>
+        <input id="add-title" name="title" placeholder="Add work…" maxlength="200" required>
+        <button type="submit">Add</button>
+      </form>
+      <p id="status" class="status" role="status"></p>
+
+      <div class="board">
+        <section data-status="todo"><h2>To do <span class="n"></span></h2><ul></ul></section>
+        <section data-status="doing"><h2>Doing <span class="n"></span></h2><ul></ul></section>
+        <section data-status="blocked"><h2>Blocked <span class="n"></span></h2><ul></ul></section>
+      </div>
+
+      <section class="lately">
+        <h2>Lately</h2>
+        <ol id="lately"></ol>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="item">
+    <form method="dialog" class="close"><button aria-label="Close">×</button></form>
+    <p class="key"></p>
+    <label for="title" class="sr">Title</label>
+    <input id="title" class="title" maxlength="200">
+    <label for="notes" class="sr">Notes</label>
+    <textarea id="notes" class="notes" rows="3" placeholder="Notes" maxlength="10000"></textarea>
+    <dl class="facts">
+      <dt>Status</dt><dd class="f-status"></dd>
+      <dt>Owner</dt><dd><select class="f-owner" aria-label="Owner"></select></dd>
+      <dt>Due</dt><dd class="f-due"></dd>
+    </dl>
+    <label for="why">Why <span class="hint">(goes in the history)</span></label>
+    <input id="why" maxlength="500">
+    <div class="moves">
+      <button type="button" data-move="todo">To do</button>
+      <button type="button" data-move="doing">Doing</button>
+      <button type="button" data-move="blocked">Blocked</button>
+      <button type="button" data-close="done" class="primary">Done</button>
+      <button type="button" data-close="dropped">Drop</button>
+    </div>
+    <p class="error" role="alert"></p>
+    <h3>History</h3>
+    <ol class="history"></ol>
+    <form class="comment">
+      <label for="comment" class="sr">Comment</label>
+      <textarea id="comment" rows="2" placeholder="Comment…" maxlength="5000" required></textarea>
+      <button type="submit">Comment</button>
+    </form>
+  </dialog>
+</body>
+</html>

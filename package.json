@@ -1,0 +1,28 @@
+{
+  "name": "lab-work-tracker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lab 007: a small work tracker where people and AI agents use the same actions, over a web page, an HTTP API and MCP.",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.toml",
+    "db:local": "wrangler d1 execute work-tracker --local --config wrangler.toml --file schema.sql",
+    "db:remote": "wrangler d1 execute work-tracker --remote --config wrangler.toml --file schema.sql",
+    "token": "node scripts/token.mjs",
+    "deploy": "wrangler deploy --config wrangler.toml",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.18.6",
+    "@cloudflare/workers-types": "4.20260702.1",
+    "@types/node": "24.13.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10",
+    "wrangler": "4.107.0"
+  }
+}

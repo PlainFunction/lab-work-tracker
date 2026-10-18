@@ -1,0 +1,70 @@
+:root {
+  --paper: #F7F7FF; --ink: #131112; --body: #60656F; --line: #DDDDE8;
+  --accent: #279AF1; --navy: #1E3A72; --rose: #C49991; --card: #FFFFFF;
+  color-scheme: light;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+/* .panel and friends set display, which would otherwise beat the hidden attribute. */
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--body); }
+h1, h2, h3 { color: var(--ink); margin: 0; line-height: 1.2; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1rem; }
+h3 { font-size: .9rem; margin-top: 1.25rem; }
+header, main { max-width: 72rem; margin: 0 auto; padding: 1rem; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+header p { margin: 0; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+input, select, textarea { border: 1px solid var(--line); border-radius: 6px; padding: .45rem .6rem; background: var(--card); width: 100%; }
+button { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: .45rem .8rem; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary, form > button[type=submit] { background: var(--navy); border-color: var(--navy); color: #fff; }
+button.link { border: 0; background: none; padding: 0; color: var(--accent); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; display: grid; gap: .5rem; max-width: 28rem; }
+.error { color: #A33; margin: 0; min-height: 1em; }
+.status { margin: .25rem 0 1rem; min-height: 1.5em; font-size: .9rem; }
+
+.asks { max-width: none; border-color: var(--accent); }
+.asks ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.asks li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: .5rem; }
+.asks li p { margin: 0; flex: 1 1 18rem; }
+.asks li strong { color: var(--ink); }
+
+.add { display: flex; gap: .5rem; }
+.add button { flex: none; }
+
+.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media (max-width: 720px) { .board { grid-template-columns: 1fr; } }
+.board section { background: #EEEEF8; border-radius: 10px; padding: .75rem; min-height: 6rem; }
+.board h2 { margin-bottom: .5rem; }
+.n { color: var(--body); font-weight: 400; }
+.board ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.card { width: 100%; text-align: left; display: grid; gap: .15rem; padding: .6rem .7rem; }
+.card .t { color: var(--ink); }
+.card .m { font-size: .8rem; }
+.tag { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; border: 1px solid var(--rose); color: var(--ink); border-radius: 4px; padding: 0 .3rem; margin-left: .3rem; }
+
+.lately { margin-top: 1.5rem; }
+.lately ol, .history { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .35rem; font-size: .9rem; }
+.lately li, .history li { border-left: 2px solid var(--line); padding-left: .6rem; }
+.why { display: block; color: var(--ink); }
+.when { display: block; font-size: .8rem; }
+
+dialog { border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; width: min(36rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); color: var(--body); }
+dialog::backdrop { background: rgb(19 17 18 / .35); }
+dialog .close { position: absolute; right: .75rem; top: .5rem; }
+dialog .close button { border: 0; font-size: 1.4rem; background: none; }
+.key { margin: 0; font-size: .8rem; }
+.notes { white-space: pre-wrap; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1rem; align-items: center; }
+.facts dt { font-size: .85rem; }
+.facts dd { margin: 0; color: var(--ink); }
+.hint { font-size: .8rem; color: var(--body); }
+.moves { display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0; }
+.moves button[aria-pressed=true] { border-color: var(--accent); background: #E6F3FE; }
+.comment { display: grid; gap: .4rem; margin-top: .75rem; }
+.comment button { justify-self: start; }
+dialog .title { font-size: 1.15rem; font-weight: 600; border-color: transparent; padding-left: 0; margin: .25rem 0; }
+dialog .title:focus, dialog .notes:focus { border-color: var(--accent); padding-left: .6rem; }

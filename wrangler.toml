@@ -1,0 +1,23 @@
+# One Worker per team, with its own D1. The page is static assets in ./public;
+# only /api/* and /mcp run the Worker. Fill in the database id, then see README.md.
+
+name = "work-tracker"
+main = "src/worker.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "./public"
+# The page holds nothing private, so it's served without running any code.
+run_worker_first = ["/api/*", "/mcp"]
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "work-tracker"           # wrangler d1 create work-tracker --location oc
+database_id = "<d1 id>"
