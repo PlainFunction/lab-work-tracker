@@ -1,9 +1,8 @@
 # Lab 007: a work tracker for people and AI agents
 
 The code behind our lab [A Work Tracker for People and AI Agents](https://plainfunction.com.au/labs/work-tracker).
-It's a small replacement for the parts of Jira, GitHub Projects or ServiceNow
-that most teams use: a list of work, who has it, where it's up to, and what
-happened to it.
+It covers the parts of a work tracker most teams use: a list of work, who has
+it, where it's up to, and what happened to it.
 
 The whole tracker is a list of twelve actions. The web page, the HTTP API and
 an MCP server all run the same list, so a person and an AI agent can do the
