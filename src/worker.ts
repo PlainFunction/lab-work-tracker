@@ -1,5 +1,7 @@
-import { ActionError, describeActions, perform, type Actor } from './actions'
+import { Logger, traceFetch, type Registry, type TelemetryEnv } from '#capabilities'
+import { ActionError, describeActions, type Actor } from './actions'
 import { mcp, rpcError } from './mcp'
+import { Actions, TrackerModule } from './module'
 
 // Only /api/* and /mcp reach this Worker. The page is static assets.
 //
@@ -9,7 +11,7 @@ import { mcp, rpcError } from './mcp'
 //   POST /api/actions/<name>   run one (cookie for people, Bearer token for anyone)
 //   POST /mcp                  the same actions as MCP tools (Bearer token)
 
-export interface Env { DB: D1Database }
+export interface Env extends TelemetryEnv { DB: D1Database }
 
 const COOKIE = 'wt_session'
 const SESSION_DAYS = 30
@@ -57,7 +59,7 @@ async function readJson(request: Request): Promise<unknown> {
   try { return await request.json() } catch { throw new ActionError(400, 'Nothing changed: the body was not JSON.') }
 }
 
-async function api(request: Request, url: URL, env: Env): Promise<Response> {
+async function api(request: Request, url: URL, env: Env, c: Registry): Promise<Response> {
   if (url.pathname === '/api/session' && request.method === 'POST') {
     const { token } = (await readJson(request) ?? {}) as { token?: unknown }
     const a = typeof token === 'string' ? await actorFor(env.DB, token.trim()) : null
@@ -76,29 +78,50 @@ async function api(request: Request, url: URL, env: Env): Promise<Response> {
   if (url.pathname === '/api/actions' && request.method === 'GET') return json({ ok: true, actions: describeActions() })
   const name = /^\/api\/actions\/([a-z_]+)$/.exec(url.pathname)?.[1]
   if (name && request.method === 'POST') {
-    const result = await perform(name, await readJson(request), { db: env.DB, actor, now: new Date() })
+    const result = await c.get(Actions).perform(name, await readJson(request), { db: env.DB, actor, now: new Date() })
     return json({ ok: true, ...result })
   }
   return json({ ok: false, error: `There's nothing at ${request.method} ${url.pathname}.` }, 404)
 }
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url)
+/** Span names and logs get the route, never ids or anything a caller typed. */
+function routeOf(pathname: string): string {
+  if (['/mcp', '/api/session', '/api/me', '/api/actions'].includes(pathname)) return pathname
+  if (/^\/api\/actions\/[a-z_]+$/.test(pathname)) return '/api/actions/:name'
+  return 'unmatched'
+}
+
+// env is the same object for the life of an isolate, so so is the registry.
+const registries = new WeakMap<object, Registry>()
+const registryFor = (env: Env) => {
+  let c = registries.get(env)
+  if (!c) { c = new TrackerModule(env).build(); registries.set(env, c) }
+  return c
+}
+
+/** One request, traced, against a built registry. Tests hand it one with MemoryTelemetry. */
+export function handle(c: Registry, request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url)
+  return traceFetch(c, request, ctx, routeOf(url.pathname), async span => {
     try {
       if (url.pathname === '/mcp') {
         if (request.method !== 'POST') return new Response(null, { status: 405, headers: { allow: 'POST' } })
         const token = bearer(request)
         const actor = token ? await actorFor(env.DB, token) : null
         if (!actor) return rpcError(null, -32001, 'Send a token as "Authorization: Bearer <token>".', 401)
-        return await mcp(request, { db: env.DB, actor, now: new Date() })
+        return await mcp(request, { db: env.DB, actor, now: new Date() }, c.get(Actions))
       }
-      if (url.pathname.startsWith('/api/')) return await api(request, url, env)
+      if (url.pathname.startsWith('/api/')) return await api(request, url, env, c)
       return new Response('Not found', { status: 404 })
     } catch (err) {
       if (err instanceof ActionError) return json({ ok: false, error: err.message }, err.status)
-      console.error(err)
+      span.recordError(err)
+      c.get(Logger).error('request.failed', { error: err })
       return json({ ok: false, error: 'Something went wrong on our side. Check the history before trying again.' }, 500)
     }
-  },
+  })
+}
+
+export default {
+  fetch: (request: Request, env: Env, ctx?: ExecutionContext) => handle(registryFor(env), request, env, ctx),
 } satisfies ExportedHandler<Env>

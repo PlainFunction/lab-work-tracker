@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Lab 007: a small work tracker where people and AI agents use the same actions, over a web page, an HTTP API and MCP.",
+  "imports": {
+    "#capabilities": "./capabilities/index.ts"
+  },
   "scripts": {
     "dev": "wrangler dev --config wrangler.toml",
     "db:local": "wrangler d1 execute work-tracker --local --config wrangler.toml --file schema.sql",
