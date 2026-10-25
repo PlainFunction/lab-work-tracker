@@ -8,7 +8,7 @@ export const ORIGIN = 'https://work.example'
 export async function reset() {
   const statements = schema.split('\n').filter(l => !l.trim().startsWith('--')).join('\n').split(';').map(s => s.trim()).filter(Boolean)
   // Dropped, not emptied: AUTOINCREMENT would carry on numbering from the last test.
-  await env.DB.batch(['asks', 'events', 'items', 'actors'].map(t => env.DB.prepare(`DROP TABLE IF EXISTS ${t}`)))
+  await env.DB.batch(['settings', 'asks', 'events', 'items', 'token_limits', 'actors'].map(t => env.DB.prepare(`DROP TABLE IF EXISTS ${t}`)))
   await env.DB.batch(statements.map(s => env.DB.prepare(s)))
   const add = async (id: string, name: string, kind: string, token: string) =>
     env.DB.prepare("INSERT INTO actors (id, name, kind, token_hash, created_at) VALUES (?, ?, ?, ?, '2026-10-18T00:00:00Z')").bind(id, name, kind, await sha256Hex(token)).run()

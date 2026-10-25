@@ -13,7 +13,7 @@ Use list_people for the ids to assign work to, and get_item before changing some
 
 interface RpcRequest { jsonrpc?: string; id?: number | string | null; method?: string; params?: Record<string, unknown> }
 
-export const tools = () => ACTIONS.map(a => ({
+export const tools = (allowed?: string[]) => ACTIONS.filter(a => !allowed || allowed.includes(a.name)).map(a => ({
   name: a.name,
   description: a.description,
   inputSchema: inputSchema(a),
@@ -39,7 +39,7 @@ export async function mcp(request: Request, ctx: Ctx, actions: Actions): Promise
     })
   }
   if (method === 'ping') return reply({})
-  if (method === 'tools/list') return reply({ tools: tools() })
+  if (method === 'tools/list') return reply({ tools: tools(ctx.actor.actions) })
   if (method === 'tools/call') {
     try {
       const result = await actions.perform(String(params.name ?? ''), params.arguments ?? {}, ctx)

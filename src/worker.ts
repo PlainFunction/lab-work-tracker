@@ -21,9 +21,14 @@ export async function sha256Hex(text: string): Promise<string> {
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
+/** Who a token belongs to, unless it has run out. */
 async function actorFor(db: D1Database, token: string): Promise<Actor | null> {
   if (!token || token.length > 200) return null
-  return db.prepare('SELECT id, name, kind FROM actors WHERE token_hash = ?').bind(await sha256Hex(token)).first<Actor>()
+  const row = await db.prepare(`SELECT a.id, a.name, a.kind, l.actions FROM actors a LEFT JOIN token_limits l ON l.id = a.id
+    WHERE a.token_hash = ? AND (l.expires_at IS NULL OR l.expires_at > ?)`).bind(await sha256Hex(token), new Date().toISOString()).first<Omit<Actor, 'actions'> & { actions: string | null }>()
+  if (!row) return null
+  const { actions, ...actor } = row
+  return actions ? { ...actor, actions: JSON.parse(actions) as string[] } : actor
 }
 
 const cookieToken = (request: Request) =>
@@ -99,11 +104,19 @@ const registryFor = (env: Env) => {
   return c
 }
 
+export const SWITCHED_OFF = 'Switched off: nothing was done. Whoever runs this has turned it off for now.'
+
+/** Whether someone has run npm run off. */
+const switchedOff = async (db: D1Database) => !!(await db.prepare("SELECT 1 FROM settings WHERE key = 'off-switch'").first())
+
 /** One request, traced, against a built registry. Tests hand it one with MemoryTelemetry. */
 export function handle(c: Registry, request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const url = new URL(request.url)
   return traceFetch(c, request, ctx, routeOf(url.pathname), async span => {
     try {
+      if ((url.pathname === '/mcp' || url.pathname.startsWith('/api/')) && await switchedOff(env.DB)) {
+        return url.pathname === '/mcp' ? rpcError(null, -32002, SWITCHED_OFF, 503) : json({ ok: false, error: SWITCHED_OFF }, 503)
+      }
       if (url.pathname === '/mcp') {
         if (request.method !== 'POST') return new Response(null, { status: 405, headers: { allow: 'POST' } })
         const token = bearer(request)

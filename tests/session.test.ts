@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { ORIGIN, fetchWorker, reset } from './helpers'
+import { env } from 'cloudflare:workers'
+import { ORIGIN, call, fetchWorker, reset, rpc } from './helpers'
 
 beforeEach(reset)
 
@@ -48,5 +49,33 @@ describe('the page signs people in with a cookie', () => {
     const { actions } = await res.json() as { actions: { name: string; agents: string }[] }
     expect(actions.find(a => a.name === 'close_item')?.agents).toBe('ask')
     expect(actions.find(a => a.name === 'decide_ask')?.agents).toBe('never')
+  })
+})
+
+describe('token limits', () => {
+  it('stops a token working once it has run out', async () => {
+    await env.DB.prepare("INSERT INTO token_limits (id, expires_at) VALUES ('sam', '2000-01-01T00:00:00Z')").run()
+    expect((await signIn('sam-token')).status).toBe(401)
+    expect((await call('sam-token', 'list_work')).status).toBe(401)
+    expect((await call('bot-token', 'list_work')).status).toBe(200)
+  })
+
+  it('keeps an agent to the actions its token lists, over the API and MCP', async () => {
+    await env.DB.prepare(`INSERT INTO token_limits (id, expires_at, actions) VALUES ('triage-bot', '2999-01-01T00:00:00Z', '["list_work"]')`).run()
+    expect((await call('bot-token', 'list_work')).status).toBe(200)
+    const refused = await call('bot-token', 'add_item', { title: 'Something', why: 'Testing' })
+    expect(refused).toMatchObject({ status: 403, body: { error: expect.stringMatching(/^Nothing changed: this token can't add_item/) } })
+    const { body } = await rpc('bot-token', 'tools/list')
+    expect(body.result.tools.map((t: { name: string }) => t.name)).toEqual(['list_work'])
+  })
+})
+
+describe('off switch', () => {
+  it('answers every API and MCP call with what did not happen, until it is back on', async () => {
+    await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('off-switch', 'on')").run()
+    expect(await call('sam-token', 'list_work')).toMatchObject({ status: 503, body: { error: expect.stringMatching(/^Switched off: nothing was done/) } })
+    expect(await rpc('bot-token', 'tools/list')).toMatchObject({ status: 503, body: { error: { message: expect.stringMatching(/^Switched off/) } } })
+    await env.DB.prepare("DELETE FROM settings WHERE key = 'off-switch'").run()
+    expect((await call('sam-token', 'list_work')).status).toBe(200)
   })
 })

@@ -6,7 +6,10 @@ main = "src/worker.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
-workers_dev = true
+# One address only: the custom domain below. No workers.dev, so there's no second
+# way in that nobody watches. People and agents both sign in with a token.
+workers_dev = false
+# routes = [{ pattern = "tracker.example.com", custom_domain = true }]
 preview_urls = false
 
 [assets]

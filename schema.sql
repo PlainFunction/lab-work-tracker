@@ -8,6 +8,16 @@ CREATE TABLE IF NOT EXISTS actors (
   created_at TEXT NOT NULL
 );
 
+-- How long each token works and, for an agent, which actions it may run (a JSON list;
+-- NULL is every action open to agents). An actor with no row here never runs out, so
+-- applying this again gives any that are missing a year from now.
+CREATE TABLE IF NOT EXISTS token_limits (
+  id TEXT PRIMARY KEY REFERENCES actors(id),
+  expires_at TEXT NOT NULL,
+  actions TEXT
+);
+INSERT OR IGNORE INTO token_limits (id, expires_at) SELECT id, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+365 days') FROM actors;
+
 -- One piece of work. Nothing is ever deleted: work that won't happen is closed as dropped.
 CREATE TABLE IF NOT EXISTS items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,3 +61,10 @@ CREATE TABLE IF NOT EXISTS asks (
   decided_at TEXT
 );
 CREATE INDEX IF NOT EXISTS asks_state ON asks (state, id);
+
+-- One switch that stops the tracker: while 'off-switch' is here, every API and MCP call
+-- says nothing was done. npm run off -- --remote adds it; npm run on takes it away.
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);

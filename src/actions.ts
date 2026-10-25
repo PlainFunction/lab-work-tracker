@@ -4,7 +4,11 @@ import { z } from 'zod'
 // MCP all call perform(), so a person and an agent can do exactly the same
 // things, except where an action says otherwise.
 
-export interface Actor { id: string; name: string; kind: 'person' | 'agent' }
+export interface Actor {
+  id: string; name: string; kind: 'person' | 'agent'
+  /** For an agent, the only actions its token may run. Unset, every action open to agents. */
+  actions?: string[]
+}
 export interface Ctx { db: D1Database; actor: Actor; now: Date }
 /** Every result starts with one plain line saying what happened. */
 export type Result = { message: string } & Record<string, unknown>
@@ -305,6 +309,7 @@ export async function perform(name: string, raw: unknown, ctx: Ctx): Promise<Res
   }
   const args = parsed.data as Record<string, unknown>
   if (ctx.actor.kind === 'agent') {
+    if (ctx.actor.actions && !ctx.actor.actions.includes(a.name)) throw new ActionError(403, `Nothing changed: this token can't ${a.name}. Ask whoever runs the tracker for one that can.`)
     if (a.agents === 'never') throw new ActionError(403, `Nothing changed: ${a.name} is for people only.`)
     if (a.changes && a.name !== 'comment' && !args.why) throw new ActionError(400, 'Nothing changed: agents give a why with every change, so the history makes sense later.')
     if (a.agents === 'ask') {

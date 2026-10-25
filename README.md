@@ -73,6 +73,7 @@ curl https://work.example.com/api/actions/list_work \
 
 ```bash
 npx wrangler d1 create work-tracker --location oc   # put the id in wrangler.toml
+# uncomment routes in wrangler.toml with your host: workers.dev is off
 npm run db:remote
 npm run token -- --name "Sam" --kind person --remote
 npm run deploy
@@ -81,6 +82,23 @@ npm run deploy
 Run `npm run token` again for the same name to replace a token, or
 `npm run token -- --revoke <id> --remote` to stop one working. People and
 agents are never deleted, so the history keeps their names.
+
+A person's token works for a year and an agent's for 90 days; `--days` changes
+that. `--actions` keeps an agent to the actions it needs, say
+`--kind agent --actions list_work,get_item,comment`. Run `npm run db:remote` again after updating: it adds
+the table for this and gives tokens from before it a year.
+
+## Switching it off
+
+`npm run off -- --remote` stops the tracker without a deploy: every API and MCP
+call says nothing was done, for people and agents alike. Nothing is deleted, and
+`npm run on -- --remote` starts it again.
+
+## If a token leaks
+
+Revoke it (`--revoke <id> --remote`) and give them a new one. There are no other
+keys to rotate: D1 is a binding, not a key. If you can't tell
+which token leaked, switch it off, replace them all, and switch it back on.
 
 ## License
 
